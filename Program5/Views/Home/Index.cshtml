@@ -1,0 +1,97 @@
+﻿<div class="row">
+    <div class="col-md-4">
+        <h1 style="color:red;">Travel Log Keeper</h1>
+        <h2>Xue Guan</h2>
+        <p>University of Washington Bothell</p>
+        <p>CSS 436: Cloud Computing</p>
+        <p>Program 5: Final Project</p>
+        <h2>Services Utilized:</h2>
+        <p>(1) <a href="https://portal.azure.com/#blade/Microsoft_Azure_Storage/ContainerMenuBlade/overview/storageAccountId/%2Fsubscriptions%2Fe3deea6e-419b-444c-a8d4-c3c0cebc0c8b%2Fresourcegroups%2F20210226CSS%2Fproviders%2FMicrosoft.Storage%2FstorageAccounts%2Fxuestorage1/path/citycontainer/etag/%220x8D8E2CA3AA8477A%22/defaultEncryptionScope/%24account-encryption-key/denyEncryptionScopeOverride//defaultId//publicAccessVal/Container">Azure Blob Storage</a></p>
+        <p>(2) <a href="https://portal.azure.com/#@("@")f6b6dd5b-f02f-441a-99a0-162ac5060bd2/resource/subscriptions/e3deea6e-419b-444c-a8d4-c3c0cebc0c8b/resourcegroups/20210226CSS/providers/Microsoft.Storage/storageAccounts/xuestorage1/tableList">Azure Table Storage</a></p>
+        <p>(3) <a href="https://xueguanweb.azurewebsites.net/">Azure AppServices</a></p>
+        <p>(4) <a href="/api/cities/Seattle">Exposed Web API - /api/cities</a></p>
+        <p>(5) <a href="http://geodb-free-service.wirefreethought.com/v1/geo/cities?namePrefix=Seattle">Consumed RESTful API - Geodb</a></p>
+        <p>(6) <a href="https://github.com/cherylguan/css436p5">GitHub</a></p>
+    </div>
+    <div class="col-md-4">
+        <h2>1) Save Travel Log</h2>
+        <p>
+            Fill the form below and click Save to store a travel log.
+        </p>
+        <a href="#" id="saveDialogLink">How does it work?</a>
+        <p>
+            <label for="travelerNameInput">Traveler Name:</label>
+            <input type="text" id="travelerNameInput">
+        </p>
+        <p>
+            <label for="cityInput">City:</label>
+            <input type="text" id="cityInput">
+        </p>
+        <p>
+            <label for="notesInput">Your notes:</label>
+        </p>
+        <p>
+            <textarea id="notesInput" style="overflow-y: scroll; overflow-x: scroll; height: 150px; max-height: 150px; max-width: 300px; width: 300px; resize: none;"></textarea>
+        </p>
+        <p>
+            <button class="btn btn-default" id="saveTravelLogButton">Save</button>
+            <span style="color:blue;" id="saveStatusText"></span>
+        </p>
+    </div>
+    <div class="col-md-4">
+        <h2>2) Query Travel Logs</h2>
+        <p>Enter traveler name and click Query to see logs for that traveler.</p>
+        <a href="#" id="queryDialogLink">How does it work?</a>
+        <p>
+            <label for="travelerNameInput2">Traveler Name:</label>
+            <input type="text" id="travelerNameInput2">
+        </p>
+        <p>
+            <button class="btn btn-default" id="queryTravelLogsButton">Query</button>
+            <span style="color:blue;" id="queryStatusText"></span>
+        </p>
+    </div>
+</div>
+<div class="row">
+    <h2>Query Results:</h2>
+    <textarea id="resultTextArea" style="font-weight: bold; overflow-y: scroll; overflow-x: scroll; height: 300px; max-height: 300px; max-width: 1200px; width: 1200px; resize: none;"></textarea>
+</div>
+
+<script>
+    window.onload = function () {
+        $("#saveTravelLogButton").click(function () {
+            $("#queryStatusText").html("");
+            $("#resultTextArea").html("");
+            $("#saveStatusText").html("Saving travel log...");
+            var body = {
+                TravelerName: $("#travelerNameInput").val(),
+                City: $("#cityInput").val(),
+                Notes: $("#notesInput").val(),
+            }
+
+            $.post("/api/travel", body, function (data) {
+                $("#resultTextArea").html(data);
+                $("#saveStatusText").html("Done, check result below.");
+            });
+        });
+
+        $("#queryTravelLogsButton").click(function () {
+            $("#saveStatusText").html("");
+            $("#resultTextArea").html("");
+            $("#queryStatusText").html("Querying travel logs...");
+            $.get("/api/travel/" + $("#travelerNameInput2").val(), function (data) {
+                $("#resultTextArea").html(data);
+                $("#queryStatusText").html("Done, check result below.");
+            });
+        });
+
+        $("#saveDialogLink").click(function () {
+            alert("This will make an AJAX POST call to my travel api - /api/travel, which will then call 2 other external APIs to gather touristic information about the city. It will get weather info from Open Weather Map API, and location info from geodb API, and saves this info as a blob in Blob Container along with your notes. It also inserts a record to Azure Table for querying. This record includes the blob url for the travel log so that they can be retreived and displayd together.");
+        });
+
+        $("#queryDialogLink").click(function () {
+            alert("This will make an AJAX GET call to my travel API - /api/travel/{TravelerName}. My API will first query Azure Table for records. It will then download the corresponding blobs from Blob Container. Each record includes the url for the blob that contains your notes along with additional city information retreived from external APIs.");
+        });
+    }
+
+</script>
